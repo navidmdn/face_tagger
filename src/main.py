@@ -9,3 +9,5 @@ locs = fh.get_face_locations(img)
 for idx, loc in enumerate(locs):
     current = fh.get_face_at_location(img, loc)
     cv2.imwrite('../data/'+str(idx)+'.jpg', current[:,:,::-1])
+
+# fh.get_face_encodings(img)
