@@ -1,37 +1,64 @@
 import face_recognition as fr
+import numpy as np
+from models.image import Image
+from collections import OrderedDict
 
 
-def get_face_locations(img):
-    digest = img.get_digest()
-    face_locations = fr.face_locations(digest)
-    locs = []
-    for location in face_locations:
-        top, right, bottom, left = location
-        locs.append([
-            int(top * img.shape[0] / img.digest_y),
-            int(right * img.shape[1] / img.digest_x),
-            int(bottom * img.shape[0] / img.digest_y),
-            int(left * img.shape[1] / img.digest_x),
-        ])
-    return locs
+class FaceHandler:
+    def __init__(self, face_embeddings):
+        self.faces = OrderedDict(
+            map(lambda user: (user.uuid, user.face_embedding), face_embeddings)
+        )
 
+    def add_face_by_user(self, user):
+        self.faces[user.uuid] = user.face_embedding
 
-def get_face_at_location(img, loc, margin=100):
-    top, right, bottom, left = loc
-    result = img.arr[
-             max(top - margin, 0):bottom + margin,
-             max(left - margin, 0):right + margin]
-    return result
+    def find_matched_id(self, face_embedding):
+        match_id = None
+        known_embeddings = list(self.faces.values())
+        matches = fr.compare_faces(known_embeddings, face_embedding)
+        face_distances = fr.face_distance(known_embeddings, face_embedding)
+        best_match_index = np.argmin(face_distances)
+        if matches[best_match_index]:
+            match_id = list(self.faces.keys())[best_match_index]
+        return match_id
 
+    @staticmethod
+    def get_face_locations(img: Image):
+        digest = img.get_digest()
+        face_locations = fr.face_locations(digest)
+        locs = []
+        for location in face_locations:
+            top, right, bottom, left = location
+            locs.append([
+                int(top * img.shape[0] / img.digest_y),
+                int(right * img.shape[1] / img.digest_x),
+                int(bottom * img.shape[0] / img.digest_y),
+                int(left * img.shape[1] / img.digest_x),
+            ])
+        return locs
 
-def get_face_windows(img):
-    locs = get_face_locations(img)
-    faces = []
-    for loc in locs:
-        faces.append(get_face_at_location(img, loc))
-    return faces
+    @staticmethod
+    def get_face_at_location(img: Image, loc, margin=10):
+        top, right, bottom, left = loc
+        result = img.arr[
+                 max(top - margin, 0):bottom + margin,
+                 max(left - margin, 0):right + margin]
+        return result
 
+    @staticmethod
+    def get_face_windows(img: Image):
+        locs = FaceHandler.get_face_locations(img)
+        faces = []
+        for loc in locs:
+            faces.append(FaceHandler.get_face_at_location(img, loc))
+        return faces
 
-def get_face_encodings(img):
-    face_locations = get_face_locations(img)
-    return fr.face_encodings(img.arr, face_locations)
+    @staticmethod
+    def get_face_encodings(img: Image):
+        face_locations = FaceHandler.get_face_locations(img)
+        return fr.face_encodings(img.arr, face_locations)
+
+    @staticmethod
+    def get_face_encoding_by_location(img: Image, location):
+        return fr.face_encodings(img.arr, [location])[0]
