@@ -5,7 +5,7 @@ from application.user_handler import UserHandler
 
 navid_img = load_from_path('../data/0.jpg')
 nasi_img = load_from_path('../data/1.jpg')
-couple = load_from_path('../data/images/DSC_0944.JPG')
+couple = load_from_path('../data/images/DSC_0921.JPG')
 # locs = fh.get_face_locations(img)
 
 # for idx, loc in enumerate(locs):

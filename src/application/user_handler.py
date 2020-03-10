@@ -13,7 +13,6 @@ class UserHandler:
         face_locs = self.fh.get_face_locations(img)
         assert len(face_locs) == 1
 
-        #TODO: exception handli ng
         embedding = self.fh.get_face_encoding_by_location(img, face_locs[0])
         user = User(name, embedding)
         self.fh.add_face_by_user(user)

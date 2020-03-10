@@ -1,8 +1,8 @@
 from models.image import Image
-import face_recognition as fr
+import cv2
 
 
 def load_from_path(path):
-    img_arr = fr.load_image_file(path)
+    img_arr = cv2.imread(path)
     return Image(img_arr)
 

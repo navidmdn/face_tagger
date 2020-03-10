@@ -16,7 +16,7 @@ class FaceHandler:
     def find_matched_id(self, face_embedding):
         match_id = None
         known_embeddings = list(self.faces.values())
-        matches = fr.compare_faces(known_embeddings, face_embedding)
+        matches = fr.compare_faces(known_embeddings, face_embedding, tolerance=0.5)
         face_distances = fr.face_distance(known_embeddings, face_embedding)
         best_match_index = np.argmin(face_distances)
         if matches[best_match_index]:
@@ -31,10 +31,10 @@ class FaceHandler:
         for location in face_locations:
             top, right, bottom, left = location
             locs.append([
-                int(top * img.shape[0] / img.digest_y),
-                int(right * img.shape[1] / img.digest_x),
-                int(bottom * img.shape[0] / img.digest_y),
-                int(left * img.shape[1] / img.digest_x),
+                int(top / img.ratio),
+                int(right / img.ratio),
+                int(bottom / img.ratio),
+                int(left / img.ratio),
             ])
         return locs
 
