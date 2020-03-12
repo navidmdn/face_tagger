@@ -1,8 +1,8 @@
 import cv2
 
 
-MIN_DIGEST_X = 400
-MIN_DIGEST_Y = 400
+MIN_DIGEST_X = 800
+MIN_DIGEST_Y = 800
 
 
 class Image:

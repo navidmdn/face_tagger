@@ -1,6 +1,6 @@
 import face_recognition as fr
 import numpy as np
-from models.image import Image
+from src.models.image import Image
 from collections import OrderedDict
 
 
@@ -55,9 +55,8 @@ class FaceHandler:
         return faces
 
     @staticmethod
-    def get_face_encodings(img: Image):
-        face_locations = FaceHandler.get_face_locations(img)
-        return fr.face_encodings(img.arr, face_locations)
+    def get_face_encodings_by_location(img: Image, locations):
+        return fr.face_encodings(img.arr, locations)
 
     @staticmethod
     def get_face_encoding_by_location(img: Image, location):

@@ -1,5 +1,5 @@
-from util.mongo import db
-from models.user import User
+from src.util.mongo import db
+from src.models.user import User
 import numpy as np
 
 COLLECTION_NAME = 'user'
