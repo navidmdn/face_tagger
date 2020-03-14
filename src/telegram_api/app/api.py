@@ -1,31 +1,48 @@
 from src.application.pending_face_handler import PendingFaceHandler
+from src.application.user_handler import user_handler
+
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from src.telegram_api import config as bot_config
 from src.telegram_api.app import messages
 from src.telegram_api.app import state
-from src.util.image import generate_file_name, load_from_path
+from src.util.image import generate_file_name, load_from_path, save_tmp_img
 import random
 
 sessions = {}
 pending_fh = PendingFaceHandler()
 
 
-def admin_msg(bot, update):
+def is_user_allowed(user):
+    if user.effective_user.username in bot_config.ALLOWED_USERNAMES:
+        return True
+    return False
+
+
+def add_new_faces(bot, update):
+    file = bot.getFile(update.message.photo[-1].file_id)
+    dl_path = '{}/{}'.format(bot_config.DOWNLOAD_PATH, generate_file_name())
+    file.download(dl_path)
+    added = pending_fh.add_image(load_from_path(dl_path))
+    if added == -1:
+        update.message.reply_text('no new faces detected!')
+    else:
+        update.message.reply_text('new faces detected!')
+
+
+def photo_msg(bot, update):
     try:
-        if update.effective_user.id not in bot_config.ADMIN_IDS:
+        if update.effective_user.username not in bot_config.ALLOWED_USERNAMES:
             return
-        print('admin @{} sent a message'.format(update.effective_user.username))
+        print('user @{} sent a message'.format(update.effective_user.username))
         if update.effective_user.username in sessions and \
-                sessions[update.effective_user.username].status == state.WAITING_IMG:
+                sessions[update.effective_user.username].status == state.WAITING_IMG_ADD:
             if update.message.photo:
-                file = bot.getFile(update.message.photo[-1].file_id)
-                dl_path = '{}/{}'.format(bot_config.DOWNLOAD_PATH, generate_file_name())
-                file.download(dl_path)
-                added = pending_fh.add_image(load_from_path(dl_path))
-                if added == -1:
-                    update.message.reply_text('no new faces detected!')
-                else:
-                    update.message.reply_text('new faces detected!')
+                add_new_faces(bot, update)
+
+        if update.effective_user.username in sessions and \
+                sessions[update.effective_user.username].status == state.WAITING_IMG_DETECT:
+            if update.message.photo:
+                _detect(bot, update)
 
     except Exception as e:
         print("FAILED")
@@ -33,19 +50,64 @@ def admin_msg(bot, update):
         pass
 
 
-def add_img(bot, update):
-    print('api addimg called by {}'.format(update.effective_user.username))
+def _detect(update, context):
+    """
+    only detects known faces and don't do anything about unknown ones
+    :param bot:
+    :param update:
+    :return:
+    """
+    file = context.bot.getFile(update.message.photo[-1].file_id)
+    dl_path = '{}/{}'.format(bot_config.DOWNLOAD_PATH, generate_file_name())
+    file.download(dl_path)
+
+    pairs = user_handler.get_face_window_user_embedding_pairs(load_from_path(dl_path))
+    known_pairs = list(filter(lambda p: p[1] is not None, pairs))
+    for pair in known_pairs:
+        path = save_tmp_img(pair[0])
+        with open(path, 'rb') as f:
+            img_msg = update.message.reply_photo(f)
+            user = pair[1]
+            update.message.reply_text('{}'.format(user), reply_to_message_id=img_msg.message_id)
+
+
+def detect(update, context):
     try:
+        print('api detect called by {}'.format(update.effective_user.username))
+        if not is_user_allowed(update.user):
+            return
+        sessions[update.effective_user.username] = state.State('user_state', status=state.WAITING_IMG_DETECT)
+        update.message.reply_text('Send me an image now!')
+    except Exception as e:
+        #TODO
+        pass
+
+
+def ping(update, context):
+    try:
+        print("api ping called by @{}".format(update.effective_user.username))
+        update.message.reply_text('PONG!')
+    except Exception as e:
+        print('ping failed because: ', e)
+
+
+def add_img(update, context):
+    try:
+        print('api addimg called by {}'.format(update.effective_user.username))
         if update.effective_user.id not in bot_config.ADMIN_IDS:
             return
-        sessions[update.effective_user.username] = state.State('admin', status=state.WAITING_IMG)
+        sessions[update.effective_user.username] = state.State('admin', status=state.WAITING_IMG_ADD)
         update.message.reply_text('Im ready boss!')
     except Exception as e:
         #TODO
         pass
 
 
-def reset(bot, update):
+def start(update, context):
+    print('hey @{} wussup!'.format(update.effective_user.username))
+
+
+def reset(update, context):
     print('api reset called by {}'.format(update.effective_user.username))
     try:
         if update.effective_user.id not in bot_config.ADMIN_IDS:
@@ -53,9 +115,8 @@ def reset(bot, update):
         sessions[update.effective_user.username] = state.State('admin', status=state.NORMAL_STATE)
         update.message.reply_text('Everything back to normal!')
     except Exception as e:
-        #TODO
-        pass
-    pass
+        print('error in reset api because: {}'.format(e))
+
 
 
 #

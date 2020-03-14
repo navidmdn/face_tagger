@@ -1,0 +1,4 @@
+face_recognition
+python-telegram-bot
+numpy
+cv2
