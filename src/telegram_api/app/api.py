@@ -29,25 +29,24 @@ def add_new_faces(bot, update):
         update.message.reply_text('new faces detected!')
 
 
-def photo_msg(bot, update):
+def photo_msg(update, context):
     try:
         if update.effective_user.username not in bot_config.ALLOWED_USERNAMES:
             return
         print('user @{} sent a message'.format(update.effective_user.username))
         if update.effective_user.username in sessions and \
                 sessions[update.effective_user.username].status == state.WAITING_IMG_ADD:
+            #TODO: check if img previously downloaded checksum maybe
             if update.message.photo:
-                add_new_faces(bot, update)
+                add_new_faces(context.bot, update)
 
         if update.effective_user.username in sessions and \
                 sessions[update.effective_user.username].status == state.WAITING_IMG_DETECT:
             if update.message.photo:
-                _detect(bot, update)
+                _detect(context.bot, update)
 
     except Exception as e:
-        print("FAILED")
-        #todo
-        pass
+        print("api failed becaus: {}".format(e))
 
 
 def _detect(update, context):

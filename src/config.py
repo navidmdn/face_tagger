@@ -1,3 +1,3 @@
 
-PENDING_FACE_PATH = '/home/navid/data/imgs/pending'
+PENDING_FACE_PATH = '/home/ubuntu/face_tagger/data/pending_faces'
 

@@ -16,6 +16,8 @@ class FaceHandler:
     def find_matched_id(self, face_embedding):
         match_id = None
         known_embeddings = list(self.faces.values())
+        if len(known_embeddings) == 0:
+            return None
         matches = fr.compare_faces(known_embeddings, face_embedding, tolerance=0.5)
         face_distances = fr.face_distance(known_embeddings, face_embedding)
         best_match_index = np.argmin(face_distances)

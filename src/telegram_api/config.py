@@ -1,5 +1,5 @@
-DOWNLOAD_PATH = '/home/navid/data/imgs/download'
-TMP_PATH = '/home/navid/data/imgs/tmp'
+DOWNLOAD_PATH = '/home/ubuntu/face_tagger/data/download'
+TMP_PATH = '/home/ubuntu/face_tagger/data/tmp'
 
 ACCESS_TOKEN = '1141174897:AAFN7szTjLYL-VTaAPRvEXvTkG2a4SJfAK4'
 
