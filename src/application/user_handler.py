@@ -8,12 +8,17 @@ class UserHandler:
         face_embeddings = UserDao.load_all_user_embeddings()
         self.fh = FaceHandler(face_embeddings)
 
-    def add_user_by_picture_name(self, img: Image, name):
+    def add_user_by_embedding_name_phone(self, embedding, name, phone_number):
+        user = User(name, embedding, phone_number=phone_number)
+        self.fh.add_face_by_user(user)
+        UserDao(user).save()
+
+    def add_user_by_picture_name_phone_number(self, img: Image, name, phone_number):
         face_locs = self.fh.get_face_locations(img)
         assert len(face_locs) == 1
 
         embedding = self.fh.get_face_encoding_by_location(img, face_locs[0])
-        user = User(name, embedding)
+        user = User(name, embedding, phone_number=phone_number)
         self.fh.add_face_by_user(user)
         UserDao(user).save()
 

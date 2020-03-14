@@ -11,12 +11,14 @@ class UserDao:
         self._id = user.uuid
         self.name = user.name
         self.face_embedding = list(user.face_embedding)
+        self.phone_number = user.phone_number
 
     def to_dao(self):
         return {
             '_id': self._id,
             'name': self.name,
-            'face_embedding': self.face_embedding
+            'face_embedding': self.face_embedding,
+            'phone_number': self.phone_number
         }
 
     @staticmethod
@@ -24,7 +26,8 @@ class UserDao:
         return User(
             name=obj['name'],
             face_embedding=np.array(obj['face_embedding']),
-            uuid=obj['_id']
+            uuid=obj['_id'],
+            phone_number=obj['phone_number']
         )
 
     def save(self):

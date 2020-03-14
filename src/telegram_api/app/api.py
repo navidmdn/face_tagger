@@ -46,7 +46,39 @@ def photo_msg(update, context):
                 _detect(context.bot, update)
 
     except Exception as e:
-        print("api failed becaus: {}".format(e))
+        print("api photo_msg failed becaus: {}".format(e))
+
+
+def text_msg(update, context):
+    try:
+        username = update.effective_user.username
+        print('user @{} sent a message'.format(username))
+        if username not in bot_config.ALLOWED_USERNAMES:
+            return
+        if username in sessions and sessions[username].status == state.CONTRIBUTOR_WAIT_NAME:
+            if username in pending_fh.pending:
+                pending_fh.pending[username].pending_user_info['name'] = update.message.text
+                update.message.reply_text('Enter Phone Number:')
+                sessions[username].change_status(state.CONTRIBUTOR_WAIT_PHONE)
+                return
+
+        if username in sessions and sessions[username].status == state.CONTRIBUTOR_WAIT_PHONE:
+            if username in pending_fh.pending:
+                pending_fh.pending[username].pending_user_info['phone_number'] = update.message.text
+
+                user_handler.add_user_by_embedding_name_phone(
+                    embedding=pending_fh.pending[username].face_embedding,
+                    name=pending_fh.pending[username].pending_user_info['name'],
+                    phone_number=pending_fh.pending[username].pending_user_info['phone_number']
+                )
+                pending_fh.submit_info(username)
+                sessions[username].change_status(state.NORMAL_STATE)
+                update.message.reply_text('All done!')
+                return
+    except Exception as e:
+        print("api txt_msg failed because: {}".format(e))
+
+
 
 
 def _detect(update, context):
@@ -103,18 +135,45 @@ def add_img(update, context):
 
 
 def start(update, context):
-    print('hey @{} wussup!'.format(update.effective_user.username))
+    try:
+        print('api start called by {}'.format(update.effective_user.username))
+        update.message.reply_text('Hello!')
+    except Exception as e:
+        print('error in start api because: {}'.format(e))
 
 
 def reset(update, context):
-    print('api reset called by {}'.format(update.effective_user.username))
     try:
+        print('api reset called by {}'.format(update.effective_user.username))
         if update.effective_user.id not in bot_config.ADMIN_IDS:
             return
         sessions[update.effective_user.username] = state.State('admin', status=state.NORMAL_STATE)
         update.message.reply_text('Everything back to normal!')
     except Exception as e:
         print('error in reset api because: {}'.format(e))
+
+
+def contribute(update, context):
+    try:
+        print('api contribute called by {}'.format(update.effective_user.username))
+        if update.effective_user.username not in bot_config.CONTRIBUTERS:
+            return
+        sessions[update.effective_user.username] = state.State('contributor', status=state.CONTRIBUTOR_WAIT_NAME)
+        update.message.reply_text('wait for a photo!')
+        pending_face = pending_fh.get_random_pending_face()
+
+        if pending_face is None:
+            update.message.reply_text('no new faces to tag!')
+            sessions[update.effective_user.username].change_status(state.NORMAL_STATE)
+            return
+
+        with open(pending_face.img_path, 'rb') as f:
+            pending_fh.pending[update.effective_user.username] = pending_face
+            update.message.reply_photo(f)
+            update.message.reply_text('Enter full name:')
+    except Exception as e:
+        print('error in contrib api because: {}'.format(e))
+
 
 
 

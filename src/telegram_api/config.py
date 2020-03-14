@@ -18,3 +18,8 @@ ALLOWED_USERNAMES = [
     "Nassi_o",
     "Naadiiaa_mdn"
 ]
+
+
+CONTRIBUTERS = [
+    "mdnaweed"
+]

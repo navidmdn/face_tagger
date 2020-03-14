@@ -7,7 +7,7 @@ from src.dataaccess.pending_face import PendingFaceDao
 
 class PendingFaceHandler:
     def __init__(self):
-        pass
+        self.pending = {}
 
     def add_image(self, img: Image):
         new_face = False
@@ -22,3 +22,11 @@ class PendingFaceHandler:
         if new_face:
             return 0
         return -1
+
+    def get_random_pending_face(self):
+        pending_face = PendingFaceDao.load_random_unprocessed()
+        return pending_face
+
+    def submit_info(self, username):
+        PendingFaceDao.finish_process(self.pending[username]._id)
+        self.pending[username] = None

@@ -15,8 +15,10 @@ def run():
     updater.dispatcher.add_handler(PrefixHandler('#', 'reset', api.reset))
     updater.dispatcher.add_handler(PrefixHandler('#', 'detect', api.detect))
     updater.dispatcher.add_handler(PrefixHandler('#', 'poke', api.ping))
+    updater.dispatcher.add_handler(PrefixHandler('#', 'contrib', api.contribute))
 
     updater.dispatcher.add_handler(MessageHandler(Filters.photo, api.photo_msg))
+    updater.dispatcher.add_handler(MessageHandler(Filters.text, api.text_msg))
     #
     #
     # updater.dispatcher.add_handler(CallbackQueryHandler(api.collect_fap_statistics, pattern="{};[0-9]+;[0-9]+;[0-9]+".
